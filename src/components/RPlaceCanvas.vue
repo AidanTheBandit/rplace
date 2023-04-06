@@ -59,7 +59,7 @@ export default {
     this.$refs.canvas.width = 500;
     this.$refs.canvas.height = 500;
     this.context = this.$refs.canvas.getContext("2d");
-    this.socket = io("https://aidanthebandit-potential-yodel-qjp776xp7pfx9qr-3000.preview.app.github.dev");
+    this.socket = io("https://aidanthebandit-potential-yodel-qjp776xp7pfx9qr-3001.preview.app.github.dev/");
 
     this.socket.on("initialState", (data) => {
       data.forEach(({ x, y, color }) => {
@@ -80,7 +80,7 @@ export default {
 body {
   margin: 0;
   padding: 0;
-  background-color: white;
+  background-color: #f2f2f2;
 }
 
 .canvas-wrapper {
@@ -89,6 +89,10 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
 }
 
 canvas {
@@ -96,6 +100,8 @@ canvas {
   max-height: 80%;
   border-radius: 10px;
   cursor: crosshair;
+  border: 1px solid #ccc;
+  background-color: white;
 }
 
 .color-palette {
@@ -122,4 +128,3 @@ canvas {
   border: 3px solid white;
 }
 </style>
-
