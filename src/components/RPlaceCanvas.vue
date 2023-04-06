@@ -22,6 +22,7 @@
 
 <script>
 import io from "socket.io-client";
+import panzoom from "panzoom";
 
 export default {
   data() {
@@ -30,6 +31,7 @@ export default {
       context: null,
       selectedColor: 0,
       socket: null,
+      panzoomInstance: null,
       colors: [
         "#FFFFFF", "#C1C1C1", "#EF130B", "#FF7100", "#FFE400", "#00CC00", "#00B2FF", "#231FD3",
         "#A300BA", "#D37CAA", "#A0522D", "#000000", "#4C4C4C", "#740B07", "#C23800", "#E8A200",
@@ -93,9 +95,19 @@ export default {
       this.context.fillStyle = this.colors[color];
       this.context.fillRect(x * 10, y * 10, 10, 10);
     });
+
+    // Initialize panzoom
+    this.panzoomInstance = panzoom(this.$refs.canvas, {
+      maxZoom: 2,
+      minZoom: 0.5,
+      bounds: true,
+      boundsPadding: 0.1
+    });
+
   },
 };
 </script>
+
 
 <style>
 body {
@@ -110,24 +122,11 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f2f2f2;
   padding: 20px;
-  border-radius: 10px;
   box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
 }
 
-.canvas-container {
-  position: relative;
-  max-width: 80%;
-  max-height: 80%;
-  border-radius: 10px;
-  box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
-  overflow: hidden;
-}
-
 canvas {
-  width: 100%;
-  height: 100%;
   cursor: crosshair;
   border: 1px solid #ccc;
 }
@@ -138,6 +137,10 @@ canvas {
   justify-content: center;
   gap: 10px;
   margin-top: 20px;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .color-palette div {
@@ -157,16 +160,45 @@ canvas {
 }
 
 .countdown {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 30px;
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
   background-color: rgba(0, 0, 0, 0.7);
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 16px;
+  padding: 5px 10px;
+  border-radius: 15px;
+}
+
+.zoom-buttons {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.zoom-button {
+  width: 40px;
+  height: 40px;
+  background-color: #e84d83;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.zoom-button:hover {
+  opacity: 0.8;
 }
 </style>

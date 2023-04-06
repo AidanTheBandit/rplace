@@ -9,6 +9,7 @@
     "start": "node server/server.js"
   },
   "dependencies": {
+    "@panzoom/panzoom": "^4.5.1",
     "autoprefixer": "^10.4.14",
     "axios": "^0.26.1",
     "core-js": "^3.6.5",

@@ -1142,6 +1142,11 @@
     mkdirp "^1.0.4"
     rimraf "^3.0.2"
 
+"@panzoom/panzoom@^4.5.1":
+  version "4.5.1"
+  resolved "https://registry.npmjs.org/@panzoom/panzoom/-/panzoom-4.5.1.tgz"
+  integrity sha512-QOr/t7314XTwgAUDazR+RDcTAWSbkpjDnZJddd9f56jSUA8ptUsyDblAb+sp/O5O1o5Fiu9KpWxVHKuhGUgp5w==
+
 "@polka/url@^1.0.0-next.20":
   version "1.0.0-next.21"
   resolved "https://registry.npmjs.org/@polka/url/-/url-1.0.0-next.21.tgz"
