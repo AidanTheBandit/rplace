@@ -1,67 +1,83 @@
 <template>
   <div>
-    <canvas ref="canvas" @click="onClick" class="r-place-canvas"></canvas>
+    <canvas ref="canvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseout="stopDrawing"></canvas>
+    <div class="color-palette">
+      <div v-for="(color, index) in colors" :key="index" :style="{ background: color }" @click="selectColor(index)"></div>
+    </div>
   </div>
 </template>
 
 <script>
-import { inject } from "vue";
+import io from "socket.io-client";
 
 export default {
-  name: "RPlaceCanvas",
   data() {
     return {
-      canvas: null,
-      ctx: null
+      drawing: false,
+      context: null,
+      selectedColor: 0,
+      socket: null,
+      colors: [
+        "#FFFFFF", "#C1C1C1", "#EF130B", "#FF7100", "#FFE400", "#00CC00", "#00B2FF", "#231FD3",
+        "#A300BA", "#D37CAA", "#A0522D", "#000000", "#4C4C4C", "#740B07", "#C23800", "#E8A200",
+        "#005510", "#00569E", "#0E0865", "#550069", "#A75574", "#63300D",
+      ],
     };
-  },
-  setup() {
-    const socket = inject("socket");
-    return {
-      socket,
-    };
-  },
-  mounted() {
-    this.canvas = this.$refs.canvas;
-    this.ctx = this.canvas.getContext("2d");
-
-    this.canvas.width = 50;
-    this.canvas.height = 50;
-    this.canvas.style.width = "500px";
-    this.canvas.style.height = "500px";
-    this.ctx.fillStyle = "white";
-    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-    this.socket.on("tiles", (tiles) => {
-      this.drawTiles(tiles);
-    });
-
-    this.socket.emit("requestTiles");
   },
   methods: {
-    onClick(event) {
-      const rect = this.canvas.getBoundingClientRect();
-      const scaleX = this.canvas.width / rect.width;
-      const scaleY = this.canvas.height / rect.height;
-
-      const x = Math.floor((event.clientX - rect.left) * scaleX);
-      const y = Math.floor((event.clientY - rect.top) * scaleY);
-      const color = Math.floor(Math.random() * 16);
-
-      this.socket.emit("updateTile", { x, y, color });
+    startDrawing(event) {
+      this.drawing = true;
+      this.draw(event);
     },
-    drawTiles(tiles) {
-      for (const tile of tiles) {
-        this.ctx.fillStyle = tile.color;
-        this.ctx.fillRect(tile.x, tile.y, 1, 1);
-      }
+    draw(event) {
+      if (!this.drawing) return;
+      const rect = this.$refs.canvas.getBoundingClientRect();
+      const canvasX = Math.floor((event.clientX - rect.left) / 10);
+      const canvasY = Math.floor((event.clientY - rect.top) / 10);
+      this.context.fillStyle = this.colors[this.selectedColor];
+      this.context.fillRect(canvasX * 10, canvasY * 10, 10, 10);
+      this.socket.emit("placeTile", { x: canvasX, y: canvasY, color: this.selectedColor });
     },
+    stopDrawing() {
+      this.drawing = false;
+    },
+    selectColor(index) {
+      this.selectedColor = index;
+    },
+  },
+  mounted() {
+    this.$refs.canvas.width = 500;
+    this.$refs.canvas.height = 500;
+    this.context = this.$refs.canvas.getContext("2d");
+    this.socket = io("https://aidanthebandit-potential-yodel-qjp776xp7pfx9qr-3000.preview.app.github.dev");
+
+    this.socket.on("initialState", (data) => {
+      data.forEach(({ x, y, color }) => {
+        this.context.fillStyle = this.colors[color];
+        this.context.fillRect(x * 10, y * 10, 10, 10);
+      });
+    });
+
+    this.socket.on("tilePlaced", ({ x, y, color }) => {
+      this.context.fillStyle = this.colors[color];
+      this.context.fillRect(x * 10, y * 10, 10, 10);
+    });
   },
 };
 </script>
 
-<style scoped>
-.r-place-canvas {
-  border: 1px solid black;
+<style>
+.color-palette {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100px;
+  margin-top: 10px;
+}
+
+.color-palette div {
+  width: 10px;
+  height: 10px;
+  cursor: pointer;
+  border: 1px solid #ccc;
 }
 </style>

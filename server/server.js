@@ -4,10 +4,12 @@ const socketIO = require('socket.io');
 const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
+
 const server = http.createServer(app);
 const io = socketIO(server, {
   cors: {
     origin: '*',
+    methods: ['GET', 'POST'],
   },
 });
 
@@ -15,28 +17,43 @@ const db = new sqlite3.Database('my-place.db', (err) => {
   if (err) {
     console.error(err.message);
   } else {
-    db.run(`CREATE TABLE IF NOT EXISTS tiles (
-            x INTEGER NOT NULL,
-            y INTEGER NOT NULL,
-            color INTEGER NOT NULL,
-            PRIMARY KEY (x, y)
-        )`);
+    console.log('Connected to the my-place database.');
   }
 });
 
-io.on('connection', (socket) => {
-  console.log('Client connected');
+db.serialize(() => {
+  db.run('CREATE TABLE IF NOT EXISTS tiles (x INTEGER, y INTEGER, color INTEGER, PRIMARY KEY (x, y))');
+});
 
-  socket.on('update tile', (x, y, color) => {
-    db.run('INSERT OR REPLACE INTO tiles (x, y, color) VALUES (?, ?, ?)', [x, y, color]);
-    socket.broadcast.emit('tile updated', x, y, color);
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  // Send the initial state
+  db.all('SELECT * FROM tiles', (err, rows) => {
+    if (err) {
+      console.error(err.message);
+    } else {
+      console.log('Sending initial state:', rows);
+      socket.emit('initialState', rows);
+    }
   });
 
-  db.all('SELECT x, y, color FROM tiles', [], (err, rows) => {
-    if (err) {
-      throw err;
-    }
-    socket.emit('init tiles', rows);
+  socket.on('placeTile', (data) => {
+    const { x, y, color } = data;
+    console.log(`Received tile placed request at (${x}, ${y}) with color ${color}`);
+
+    // Update the tile in the database
+    db.run('INSERT OR REPLACE INTO tiles (x, y, color) VALUES (?, ?, ?)', [x, y, color], (err) => {
+      if (err) {
+        console.error(err.message);
+      } else {
+        console.log(`Tile placed at (${x}, ${y}) with color ${color} saved to the database`);
+
+        // Emit the update to all clients
+        io.emit('tilePlaced', { x, y, color });
+        console.log('Emitted tilePlaced event to all clients');
+      }
+    });
   });
 
   socket.on('disconnect', () => {
@@ -45,4 +62,6 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
