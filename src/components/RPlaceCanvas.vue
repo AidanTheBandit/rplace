@@ -1,8 +1,18 @@
 <template>
-  <div>
-    <canvas ref="canvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseout="stopDrawing"></canvas>
+  <div class="canvas-wrapper">
+    <canvas ref="canvas"
+      @mousedown="startDrawing"
+      @mousemove="draw"
+      @mouseup="stopDrawing"
+      @mouseout="stopDrawing">
+    </canvas>
     <div class="color-palette">
-      <div v-for="(color, index) in colors" :key="index" :style="{ background: color }" @click="selectColor(index)"></div>
+      <div v-for="(color, index) in colors"
+        :key="index"
+        :style="{ background: color }"
+        @click="selectColor(index)"
+        :class="{ 'selected': selectedColor === index }">
+      </div>
     </div>
   </div>
 </template>
@@ -18,7 +28,7 @@ export default {
       selectedColor: 0,
       socket: null,
       colors: [
-        "#FFFFFF", "#C1C1C1", "#EF130B", "#FF7100", "#FFE400", "#00CC00", "#00B2FF", "#231FD3",
+      "#FFFFFF", "#C1C1C1", "#EF130B", "#FF7100", "#FFE400", "#00CC00", "#00B2FF", "#231FD3",
         "#A300BA", "#D37CAA", "#A0522D", "#000000", "#4C4C4C", "#740B07", "#C23800", "#E8A200",
         "#005510", "#00569E", "#0E0865", "#550069", "#A75574", "#63300D",
       ],
@@ -67,17 +77,49 @@ export default {
 </script>
 
 <style>
+body {
+  margin: 0;
+  padding: 0;
+  background-color: white;
+}
+
+.canvas-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+canvas {
+  max-width: 80%;
+  max-height: 80%;
+  border-radius: 10px;
+  cursor: crosshair;
+}
+
 .color-palette {
   display: flex;
   flex-wrap: wrap;
-  width: 100px;
-  margin-top: 10px;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .color-palette div {
-  width: 10px;
-  height: 10px;
+  width: 20px;
+  height: 20px;
   cursor: pointer;
-  border: 1px solid #ccc;
+  border-radius: 50%;
+  box-shadow: 0px 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.color-palette div:hover {
+  opacity: 0.8;
+}
+
+.color-palette div.selected {
+  border: 3px solid white;
 }
 </style>
+

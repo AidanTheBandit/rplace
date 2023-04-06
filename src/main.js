@@ -1,6 +1,8 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 import io from "socket.io-client";
+import './main.css';
+
 
 const socket = io("https://aidanthebandit-potential-yodel-qjp776xp7pfx9qr-3000.preview.app.github.dev");
 
