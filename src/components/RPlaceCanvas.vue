@@ -5,7 +5,10 @@
         @mousedown="startDrawing"
         @mousemove="draw"
         @mouseup="stopDrawing"
-        @mouseout="stopDrawing">
+        @mouseout="stopDrawing"
+        @touchstart="startDrawingTouch"
+        @touchmove="drawTouch"
+        @touchend="stopDrawing">
       </canvas>
       <div class="countdown" v-if="!canPlaceTile">{{ getCountdownText() }}</div>
     </div>
@@ -48,16 +51,24 @@ export default {
     },
     draw(event) {
       if (!this.drawing || !this.canPlaceTile) return;
-      const rect = this.$refs.canvas.getBoundingClientRect();
-      const canvasX = Math.floor((event.clientX - rect.left) / 10);
-      const canvasY = Math.floor((event.clientY - rect.top) / 10);
+      const { x, y } = this.getCanvasCoordinates(event);
       this.context.fillStyle = this.colors[this.selectedColor];
-      this.context.fillRect(canvasX * 10, canvasY * 10, 10, 10);
-      this.socket.emit("placeTile", { x: canvasX, y: canvasY, color: this.selectedColor });
+      this.context.fillRect(x * 10, y * 10, 10, 10);
+      this.socket.emit("placeTile", { x, y, color: this.selectedColor });
       this.startTilePlacingCooldown();
     },
     stopDrawing() {
       this.drawing = false;
+    },
+    startDrawingTouch(event) {
+      if (!this.canPlaceTile) return;
+      event.preventDefault();
+      this.startDrawing(event.touches[0]);
+    },
+    drawTouch(event) {
+      if (!this.canPlaceTile) return;
+      event.preventDefault();
+      this.draw(event.touches[0]);
     },
     selectColor(index) {
       this.selectedColor = index;
@@ -76,6 +87,15 @@ export default {
     },
     getCountdownText() {
       return `You can place another tile in: ${this.countdownTime} seconds`;
+    },
+    getCanvasCoordinates(event) {
+      const rect = this.$refs.canvas.getBoundingClientRect();
+      const scale = this.panzoomInstance.getTransform().scale;
+      const offsetX = (event.clientX - rect.left) / scale;
+      const offsetY = (event.clientY - rect.top) / scale;
+      const x = Math.floor(offsetX / 10);
+      const y = Math.floor(offsetY / 10);
+      return { x, y };
     },
   },
   mounted() {
@@ -101,12 +121,18 @@ export default {
       maxZoom: 2,
       minZoom: 0.5,
       bounds: true,
-      boundsPadding: 0.1
+      boundsPadding: 0.1,
+      onStateChange: () => {
+        this.$refs.canvas.style.width = 500 * this.panzoomInstance.getTransform().scale + 'px';
+        this.$refs.canvas.style.height = 500 * this.panzoomInstance.getTransform().scale + 'px';
+      },
     });
-
   },
 };
 </script>
+
+
+
 
 
 <style>
