@@ -4,8 +4,7 @@ import io from "socket.io-client";
 import './main.css';
 
 
-//const socket = io("https://aidanthebandit-fluffy-disco-6pj96vg74rp2xq9q-3000.preview.app.github.dev");
-const socket = io("/api");
+const socket = io("http://3.83.167.70:3000");
 
 const app = createApp(App);
 app.provide("socket", socket);
