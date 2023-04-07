@@ -1,16 +1,9 @@
 const { Server } = require('socket.io');
-const sqlite3 = require('sqlite3').verbose();
-const AWS = require('aws-sdk');
+const { createClient } = require('@supabase/supabase-js');
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.LINODE_ACCESS_KEY,
-  secretAccessKey: process.env.LINODE_SECRET_KEY,
-  endpoint: process.env.LINODE_ENDPOINT,
-  s3ForcePathStyle: true,
-});
-
-const BUCKET = process.env.LINODE_BUCKET;
-const KEY = 'my-place.db';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 const io = new Server({
   cors: {
@@ -19,106 +12,43 @@ const io = new Server({
   },
 });
 
-async function downloadDatabaseFromStorage() {
-  try {
-    const data = await s3
-      .getObject({
-        Bucket: BUCKET,
-        Key: KEY,
-      })
-      .promise();
-
-    return data.Body;
-  } catch (error) {
-    console.error('Error downloading the database from Linode Object Storage:', error);
-    return null;
-  }
-}
-
-async function uploadDatabaseToStorage(buffer) {
-  try {
-    await s3
-      .putObject({
-        Bucket: BUCKET,
-        Key: KEY,
-        Body: buffer,
-      })
-      .promise();
-  } catch (error) {
-    console.error('Error uploading the database to Linode Object Storage:', error);
-  }
-}
-
-const db = new sqlite3.Database(':memory:', async (err) => {
-  if (err) {
-    console.error(err.message);
-  } else {
-    console.log('Connected to the in-memory SQLite database.');
-
-    const buffer = await downloadDatabaseFromStorage();
-    if (buffer) {
-      db.exec(buffer.toString(), (err) => {
-        if (err) {
-          console.error('Error loading the database from Linode Object Storage:', err);
-        } else {
-          console.log('Loaded the database from Linode Object Storage.');
-        }
-      });
-    }
-  }
-});
-
-db.serialize(() => {
-  db.run('CREATE TABLE IF NOT EXISTS tiles (x INTEGER, y INTEGER, color INTEGER, PRIMARY KEY (x, y))');
-});
-
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
   console.log('New client connected');
 
-  db.all('SELECT * FROM tiles', (err, rows) => {
-    if (err) {
-      console.error(err.message);
-    } else {
-      console.log('Sending initial state:', rows);
-      socket.emit('initialState', rows);
-    }
-  });
+  // Send the initial state
+  const { data, error } = await supabase.from('tiles').select('*');
 
-  socket.on('placeTile', (data) => {
+  if (error) {
+    console.error(error.message);
+  } else {
+    console.log('Sending initial state:', data);
+    socket.emit('initialState', data);
+  }
+
+  socket.on('placeTile', async (data) => {
     const { x, y, color } = data;
     console.log(`Received tile placed request at (${x}, ${y}) with color ${color}`);
 
-    db.run('INSERT OR REPLACE INTO tiles (x, y, color) VALUES (?, ?, ?)', [x, y, color], (err) => {
-      if (err) {
-        console.error(err.message);
-      } else {
-        console.log(`Tile placed at (${x}, ${y}) with color ${color} saved to the database`);
+    // Update the tile in the database
+    const { error: updateError } = await supabase
+      .from('tiles')
+      .insert([{ x, y, color }], { upsert: true });
 
-        io.emit('tilePlaced', { x, y, color });
-        console.log('Emitted tilePlaced event to all clients');
+    if (updateError) {
+      console.error(updateError.message);
+    } else {
+      console.log(`Tile placed at (${x}, ${y}) with color ${color} saved to the database`);
 
-        syncDatabaseToStorage();
-      }
-    });
+      // Emit the update to all clients
+      io.emit('tilePlaced', { x, y, color });
+      console.log('Emitted tilePlaced event to all clients');
+    }
   });
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
   });
 });
-
-async function syncDatabaseToStorage() {
-  db.serialize(() => {
-    db.all('SELECT * FROM tiles', async (err, rows) => {
-      if (err) {
-        console.error(err.message);
-      } else {
-        const buffer = Buffer.from(JSON.stringify(rows));
-        await uploadDatabaseToStorage(buffer);
-      }
-    });
-  });
-}
 
 module.exports = (req, res) => {
   io.attach(req.socket);
