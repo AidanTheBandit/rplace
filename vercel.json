@@ -2,19 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "package.json",
+      "src": "api/server.js",
       "use": "@vercel/node"
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/$1"
+      "src": "dist/**",
+      "use": "@vercel/static"
     }
   ],
-  "cleanUrls": true
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/$1"
+    }
+  ]
 }
