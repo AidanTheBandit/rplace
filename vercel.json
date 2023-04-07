@@ -13,7 +13,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/dist/$1"
+      "destination": "/$1"
     }
   ],
   "cleanUrls": true

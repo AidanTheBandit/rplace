@@ -6,7 +6,7 @@
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "start": "node server/server.js"
+    "start": "node api/index.js"
   },
   "dependencies": {
     "@panzoom/panzoom": "^4.5.1",
