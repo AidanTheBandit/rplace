@@ -102,7 +102,7 @@ export default {
     this.$refs.canvas.width = 500;
     this.$refs.canvas.height = 500;
     this.context = this.$refs.canvas.getContext("2d");
-    this.socket = io(window.location.origin + '/api/server');
+    const socket = io("/api");
 
     this.socket.on("initialState", (data) => {
       data.forEach(({ x, y, color }) => {
