@@ -4,7 +4,7 @@ import io from "socket.io-client";
 import './main.css';
 
 
-const socket = io("https://dumb-event.bndt.cloud:3000");
+const socket = io("https://place-event.bndt.cloud");
 
 const app = createApp(App);
 app.provide("socket", socket);
