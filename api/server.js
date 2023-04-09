@@ -1,48 +1,59 @@
-const { Server } = require('socket.io');
-const { createClient } = require('@supabase/supabase-js');
+const express = require('express');
+const http = require('http');
+const socketIO = require('socket.io');
+const sqlite3 = require('sqlite3').verbose();
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const app = express();
 
-const io = new Server({
+const server = http.createServer(app);
+const io = socketIO(server, {
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
   },
 });
 
-io.on('connection', async (socket) => {
+const db = new sqlite3.Database('my-place.db', (err) => {
+  if (err) {
+    console.error(err.message);
+  } else {
+    console.log('Connected to the my-place database.');
+  }
+});
+
+db.serialize(() => {
+  db.run('CREATE TABLE IF NOT EXISTS tiles (x INTEGER, y INTEGER, color INTEGER, PRIMARY KEY (x, y))');
+});
+
+io.on('connection', (socket) => {
   console.log('New client connected');
 
   // Send the initial state
-  const { data, error } = await supabase.from('tiles').select('*');
+  db.all('SELECT * FROM tiles', (err, rows) => {
+    if (err) {
+      console.error(err.message);
+    } else {
+      console.log('Sending initial state:', rows);
+      socket.emit('initialState', rows);
+    }
+  });
 
-  if (error) {
-    console.error(error.message);
-  } else {
-    console.log('Sending initial state:', data);
-    socket.emit('initialState', data);
-  }
-
-  socket.on('placeTile', async (data) => {
+  socket.on('placeTile', (data) => {
     const { x, y, color } = data;
     console.log(`Received tile placed request at (${x}, ${y}) with color ${color}`);
 
     // Update the tile in the database
-    const { error: updateError } = await supabase
-      .from('tiles')
-      .insert([{ x, y, color }], { upsert: true });
+    db.run('INSERT OR REPLACE INTO tiles (x, y, color) VALUES (?, ?, ?)', [x, y, color], (err) => {
+      if (err) {
+        console.error(err.message);
+      } else {
+        console.log(`Tile placed at (${x}, ${y}) with color ${color} saved to the database`);
 
-    if (updateError) {
-      console.error(updateError.message);
-    } else {
-      console.log(`Tile placed at (${x}, ${y}) with color ${color} saved to the database`);
-
-      // Emit the update to all clients
-      io.emit('tilePlaced', { x, y, color });
-      console.log('Emitted tilePlaced event to all clients');
-    }
+        // Emit the update to all clients
+        io.emit('tilePlaced', { x, y, color });
+        console.log('Emitted tilePlaced event to all clients');
+      }
+    });
   });
 
   socket.on('disconnect', () => {
@@ -50,10 +61,7 @@ io.on('connection', async (socket) => {
   });
 });
 
-module.exports = (req, res) => {
-  io.attach(req.socket);
-  res.setHeader('Connection', 'upgrade');
-  res.setHeader('Upgrade', 'websocket');
-  res.statusCode = 101;
-  res.end();
-};
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
