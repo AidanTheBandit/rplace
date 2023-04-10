@@ -90,35 +90,34 @@ export default {
       this.canPlaceTile = false;
       this.countdownTime = 5;
       const cooldownEndTime = Date.now() + this.countdownTime * 1000;
-setCookie("cooldownEndTime", cooldownEndTime);
-const countdownInterval = setInterval(() => {
-  const remainingTime = Math.floor((cooldownEndTime - Date.now()) / 1000);
-  if (remainingTime >= 0) {
-    this.countdownTime = remainingTime;
-  } else {
-    clearInterval(countdownInterval);
-    this.canPlaceTile = true;
-  }
-}, 1000);
-},
-getCountdownText() {
-  return `You can place another tile in: ${this.countdownTime} seconds`;
-},
-getCanvasCoordinates(event) {
-  const rect = this.$refs.canvas.getBoundingClientRect();
-  const scale = this.panzoomInstance.getTransform().scale;
-  const offsetX = (event.clientX - rect.left) / scale;
-  const offsetY = (event.clientY - rect.top) / scale;
-  const x = Math.floor(offsetX / 10);
-  const y = Math.floor(offsetY / 10);
-  return { x, y };
+      setCookie("cooldownEndTime", cooldownEndTime);
+      const countdownInterval = setInterval(() => {
+        const remainingTime = Math.floor((cooldownEndTime - Date.now()) / 1000);
+        if (remainingTime >= 0) {
+          this.countdownTime = remainingTime;
+        } else {
+          clearInterval(countdownInterval);
+          this.canPlaceTile = true;
+        }
+      }, 1000);
+    },
+    getCountdownText() {
+      return `You can place another tile in: ${this.countdownTime} seconds`;
+    },
+    getCanvasCoordinates(event) {
+      const rect = this.$refs.canvas.getBoundingClientRect();
+      const scale = this.panzoomInstance.getTransform().scale;
+      const offsetX = (event.clientX - rect.left) / scale;
+      const offsetY = (event.clientY - rect.top) / scale;
+const x = Math.floor(offsetX / 10);
+const y = Math.floor(offsetY / 10);
+return { x, y };
 },
 },
 mounted() {
 this.$refs.canvas.width = 700;
 this.$refs.canvas.height = 700;
 this.context = this.$refs.canvas.getContext("2d");
-//const socket = io("/api");
 this.socket = io("https://place-event.bndt.cloud");
 
 this.socket.on("initialState", (data) => {
