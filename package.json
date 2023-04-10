@@ -17,6 +17,7 @@
     "core-js": "^3.6.5",
     "cors": "^2.8.5",
     "express": "^4.17.3",
+    "js-cookie": "^3.0.1",
     "panzoom": "^9.4.3",
     "postcss": "^8.4.21",
     "socket.io": "^4.4.1",
