@@ -41,7 +41,7 @@ export default {
         "#005510", "#00569E", "#0E0865", "#550069", "#A75574", "#63300D",
       ],
       countdownTime: 5,
-      canPlaceTile: true,
+      canPlaceTile: false,
     };
   },
   methods: {
