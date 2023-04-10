@@ -99,8 +99,8 @@ export default {
     },
   },
   mounted() {
-    this.$refs.canvas.width = 601;
-    this.$refs.canvas.height = 601;
+    this.$refs.canvas.width = 700;
+    this.$refs.canvas.height = 700;
     this.context = this.$refs.canvas.getContext("2d");
     //const socket = io("/api");
     this.socket = io("https://place-event.bndt.cloud");
