@@ -40,8 +40,8 @@ export default {
         "#A300BA", "#D37CAA", "#A0522D", "#000000", "#4C4C4C", "#740B07", "#C23800", "#E8A200",
         "#005510", "#00569E", "#0E0865", "#550069", "#A75574", "#63300D",
       ],
-      countdownTime: 5,
-      canPlaceTile: false,
+      countdownTime: 0,
+      canPlaceTile: true,
     };
   },
   methods: {
