@@ -91,7 +91,7 @@ export default {
       this.canPlaceTile = false;
       this.countdownTime = 5;
       const cooldownEndTime = Date.now() + this.countdownTime * 1000;
-      setCookie("cooldownEndTime", cooldownEndTime);
+      setLocalStorageValue("cooldownEndTime", cooldownEndTime);
       const countdownInterval = setInterval(() => {
         const remainingTime = Math.floor((cooldownEndTime - Date.now()) / 1000);
         if (remainingTime >= 0) {
@@ -145,7 +145,7 @@ export default {
       },
     });
 
-    const storedCooldownEndTime = parseInt(getCookie("cooldownEndTime"), 10);
+    const storedCooldownEndTime = parseInt(getLocalStorageValue("cooldownEndTime"), 10);
     if (storedCooldownEndTime && !isNaN(storedCooldownEndTime) && storedCooldownEndTime > Date.now()) {
       this.countdownTime = Math.floor((storedCooldownEndTime - Date.now()) / 1000);
       this.startTilePlacingCooldown();
