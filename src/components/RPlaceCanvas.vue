@@ -59,6 +59,7 @@ export default {
   },
   methods: {
     startDrawing(event) {
+      if (!this.canPlaceTile) return;
       this.drawing = true;
       this.draw(event);
     },
@@ -109,47 +110,47 @@ export default {
       const scale = this.panzoomInstance.getTransform().scale;
       const offsetX = (event.clientX - rect.left) / scale;
       const offsetY = (event.clientY - rect.top) / scale;
-const x = Math.floor(offsetX / 10);
-const y = Math.floor(offsetY / 10);
-return { x, y };
-},
-},
-mounted() {
-this.$refs.canvas.width = 700;
-this.$refs.canvas.height = 700;
-this.context = this.$refs.canvas.getContext("2d");
-this.socket = io("https://place-event.bndt.cloud");
-
-this.socket.on("initialState", (data) => {
-  data.forEach(({ x, y, color }) => {
-    this.context.fillStyle = this.colors[color];
-    this.context.fillRect(x * 10, y * 10, 10, 10);
-  });
-});
-
-this.socket.on("tilePlaced", ({ x, y, color }) => {
-  this.context.fillStyle = this.colors[color];
-  this.context.fillRect(x * 10, y * 10, 10, 10);
-});
-
-// Initialize panzoom
-this.panzoomInstance = panzoom(this.$refs.canvas, {
-  maxZoom: 2,
-  minZoom: 0.5,
-  bounds: true,
-  boundsPadding: 0.1,
-  onStateChange: () => {
-    this.$refs.canvas.style.width = 500 * this.panzoomInstance.getTransform().scale + 'px';
-    this.$refs.canvas.style.height = 500 * this.panzoomInstance.getTransform().scale + 'px';
+      const x = Math.floor(offsetX / 10);
+      const y = Math.floor(offsetY / 10);
+      return { x, y };
+    },
   },
-});
+  mounted() {
+    this.$refs.canvas.width = 700;
+    this.$refs.canvas.height = 700;
+    this.context = this.$refs.canvas.getContext("2d");
+    this.socket = io("https://place-event.bndt.cloud");
 
-const storedCooldownEndTime = parseInt(getCookie("cooldownEndTime"), 10);
-if (storedCooldownEndTime && !isNaN(storedCooldownEndTime) && storedCooldownEndTime > Date.now()) {
-  this.countdownTime = Math.floor((storedCooldownEndTime - Date.now()) / 1000);
-  this.startTilePlacingCooldown();
-}
-},
+    this.socket.on("initialState", (data) => {
+      data.forEach(({ x, y, color }) => {
+        this.context.fillStyle = this.colors[color];
+        this.context.fillRect(x * 10, y * 10, 10, 10);
+      });
+    });
+
+    this.socket.on("tilePlaced", ({ x, y, color }) => {
+      this.context.fillStyle = this.colors[color];
+      this.context.fillRect(x * 10, y * 10, 10, 10);
+    });
+
+    // Initialize panzoom
+    this.panzoomInstance = panzoom(this.$refs.canvas, {
+      maxZoom: 2,
+      minZoom: 0.5,
+      bounds: true,
+      boundsPadding: 0.1,
+      onStateChange: () => {
+        this.$refs.canvas.style.width = 500 * this.panzoomInstance.getTransform().scale + 'px';
+        this.$refs.canvas.style.height = 500 * this.panzoomInstance.getTransform().scale + 'px';
+      },
+    });
+
+    const storedCooldownEndTime = parseInt(getCookie("cooldownEndTime"), 10);
+    if (storedCooldownEndTime && !isNaN(storedCooldownEndTime) && storedCooldownEndTime > Date.now()) {
+      this.countdownTime = Math.floor((storedCooldownEndTime - Date.now()) / 1000);
+      this.startTilePlacingCooldown();
+    }
+  },
 };
 </script>
 
